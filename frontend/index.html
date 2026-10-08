@@ -1,45 +1,847 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AptiQuiz</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>AptiQuiz — Compete. Learn. Win.</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* =========================================
+       APTIQUIZ LANDING PAGE
+       ========================================= */
+
+    .landing-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ---------- Navigation ---------- */
+
+    .landing-nav {
+      width: 100%;
+      padding: 22px 6%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 10;
+    }
+
+    .landing-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.6px;
+    }
+
+    .landing-brand-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white;
+      box-shadow: 0 8px 25px rgba(99, 102, 241, .35);
+    }
+
+    .landing-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .landing-nav-links a {
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      opacity: .75;
+      transition: .2s ease;
+    }
+
+    .landing-nav-links a:hover {
+      opacity: 1;
+    }
+
+    .nav-start {
+      padding: 10px 18px !important;
+      border-radius: 10px !important;
+      color: white !important;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5) !important;
+      border: none !important;
+      box-shadow: 0 8px 25px rgba(99, 102, 241, .25);
+    }
+
+    /* ---------- Hero ---------- */
+
+    .landing-hero {
+      width: min(1180px, 90%);
+      margin: auto;
+      padding: 60px 0 80px;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      align-items: center;
+      gap: 70px;
+      flex: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 13px;
+      border: 1px solid rgba(124, 58, 237, .3);
+      border-radius: 999px;
+      background: rgba(124, 58, 237, .08);
+      color: #7c3aed;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .hero-badge span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 12px #22c55e;
+    }
+
+    .landing-title {
+      margin: 0;
+      max-width: 700px;
+      font-size: clamp(48px, 6vw, 78px);
+      line-height: .98;
+      letter-spacing: -4px;
+      font-weight: 950;
+    }
+
+    .gradient-text {
+      background: linear-gradient(
+        100deg,
+        #7c3aed,
+        #4f46e5,
+        #2563eb
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .landing-description {
+      max-width: 570px;
+      margin: 24px 0 30px;
+      color: var(--mute);
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 150px;
+      padding: 14px 22px;
+      border-radius: 11px;
+      text-decoration: none;
+      font-weight: 800;
+      border: 1px solid transparent;
+      transition: .2s ease;
+    }
+
+    .hero-btn.primary {
+      color: white;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      box-shadow: 0 12px 30px rgba(99, 102, 241, .28);
+    }
+
+    .hero-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 35px rgba(99, 102, 241, .38);
+    }
+
+    .hero-btn.secondary {
+      color: var(--ink);
+      background: var(--surface);
+      border-color: var(--line);
+    }
+
+    .hero-btn.secondary:hover {
+      transform: translateY(-2px);
+      border-color: #7c3aed;
+    }
+
+    /* ---------- Hero Visual ---------- */
+
+    .hero-visual {
+      position: relative;
+      min-height: 470px;
+      display: grid;
+      place-items: center;
+    }
+
+    .visual-glow {
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(124, 58, 237, .25),
+        transparent 70%
+      );
+      filter: blur(10px);
+    }
+
+    .quiz-orb {
+      position: relative;
+      width: 290px;
+      height: 290px;
+      border-radius: 32px;
+      transform: rotate(-5deg);
+      background:
+        linear-gradient(
+          145deg,
+          rgba(124, 58, 237, .9),
+          rgba(37, 99, 235, .85)
+        );
+      box-shadow:
+        25px 30px 70px rgba(0, 0, 0, .25),
+        inset 0 1px 0 rgba(255,255,255,.35);
+      display: grid;
+      place-items: center;
+    }
+
+    .quiz-orb-inner {
+      width: 225px;
+      height: 225px;
+      border-radius: 25px;
+      background: rgba(10, 12, 25, .9);
+      border: 1px solid rgba(255,255,255,.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      transform: rotate(5deg);
+    }
+
+    .trophy {
+      font-size: 70px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 10px 20px rgba(255,255,255,.15));
+    }
+
+    .orb-title {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .orb-subtitle {
+      margin-top: 5px;
+      font-size: 12px;
+      opacity: .6;
+    }
+
+    .floating-card {
+      position: absolute;
+      padding: 13px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.9);
+      border: 1px solid rgba(255,255,255,.7);
+      box-shadow: 0 15px 40px rgba(0,0,0,.16);
+      backdrop-filter: blur(15px);
+      font-size: 12px;
+      font-weight: 800;
+      z-index: 3;
+    }
+
+    .floating-card.score {
+      top: 55px;
+      right: 5px;
+    }
+
+    .floating-card.players {
+      bottom: 75px;
+      left: 0;
+    }
+
+    .floating-card.live {
+      bottom: 15px;
+      right: 30px;
+    }
+
+    .floating-number {
+      display: block;
+      font-size: 21px;
+      margin-top: 3px;
+      color: #7c3aed;
+    }
+
+    /* ---------- Features ---------- */
+
+    .landing-features {
+      width: min(1180px, 90%);
+      margin: 0 auto 45px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .feature-card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: rgba(255,255,255,.55);
+      backdrop-filter: blur(10px);
+      transition: .25s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(124, 58, 237, .45);
+      box-shadow: 0 15px 35px rgba(0,0,0,.08);
+    }
+
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(124,58,237,.1);
+      font-size: 20px;
+      margin-bottom: 14px;
+    }
+
+    .feature-card h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .feature-card p {
+      margin: 0;
+      color: var(--mute);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ---------- Join Panel ---------- */
+
+    .join-panel {
+      width: min(540px, 92%);
+      margin: 20px auto 70px;
+      padding: 28px;
+      border-radius: 22px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: 0 20px 60px rgba(0,0,0,.12);
+    }
+
+    .join-panel h2 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    .join-panel > p {
+      margin: 0 0 22px;
+      color: var(--mute);
+      font-size: 14px;
+    }
+
+    .join-panel .row {
+      margin-bottom: 12px;
+    }
+
+    .join-panel input {
+      padding: 15px;
+      border-radius: 11px;
+      border: 1px solid var(--line);
+      transition: .2s ease;
+    }
+
+    .join-panel input:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 4px rgba(124,58,237,.1);
+    }
+
+    #join {
+      width: 100%;
+      margin-top: 5px;
+      padding: 15px;
+      border: 0;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white;
+      box-shadow: 0 10px 25px rgba(99,102,241,.25);
+    }
+
+    .host-link {
+      text-align: center;
+      margin-top: 17px !important;
+      margin-bottom: 0 !important;
+    }
+
+    .host-link a {
+      color: #7c3aed;
+    }
+
+    /* ---------- Footer ---------- */
+
+    .landing-footer {
+      padding: 25px 6%;
+      border-top: 1px solid var(--line);
+      color: var(--mute);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* ---------- Responsive ---------- */
+
+    @media (max-width: 850px) {
+
+      .landing-nav-links a:not(.nav-start) {
+        display: none;
+      }
+
+      .landing-hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 20px;
+        padding-top: 35px;
+      }
+
+      .hero-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .landing-description {
+        font-size: 16px;
+      }
+
+      .hero-visual {
+        min-height: 370px;
+        order: -1;
+      }
+
+      .quiz-orb {
+        width: 230px;
+        height: 230px;
+      }
+
+      .quiz-orb-inner {
+        width: 180px;
+        height: 180px;
+      }
+
+      .trophy {
+        font-size: 52px;
+      }
+
+      .floating-card.score {
+        right: 5%;
+      }
+
+      .floating-card.players {
+        left: 5%;
+      }
+
+      .landing-features {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 500px) {
+
+      .landing-nav {
+        padding: 17px 5%;
+      }
+
+      .landing-title {
+        font-size: 47px;
+        letter-spacing: -2.5px;
+      }
+
+      .hero-actions {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .hero-btn {
+        width: 100%;
+      }
+
+      .hero-visual {
+        min-height: 330px;
+      }
+
+      .floating-card {
+        transform: scale(.85);
+      }
+
+      .join-panel {
+        padding: 22px;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+
+      .quiz-orb {
+        animation: floatingOrb 5s ease-in-out infinite;
+      }
+
+      .floating-card {
+        animation: floatingCard 4s ease-in-out infinite;
+      }
+
+      .floating-card.players {
+        animation-delay: .8s;
+      }
+
+      .floating-card.live {
+        animation-delay: 1.5s;
+      }
+
+      @keyframes floatingOrb {
+        0%, 100% {
+          transform: rotate(-5deg) translateY(0);
+        }
+
+        50% {
+          transform: rotate(-3deg) translateY(-10px);
+        }
+      }
+
+      @keyframes floatingCard {
+        0%, 100% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+    }
+  </style>
 </head>
+
 <body>
-<main>
-  <h1><span>AptiQuiz</span></h1>
-  <p class="sub">Live aptitude rounds for your class.</p>
 
-  <div class="row"><input id="code" placeholder="Room code" maxlength="5" autocapitalize="characters" autocomplete="off" aria-label="Room code"></div>
-  <div class="row"><input id="name" placeholder="Your name" maxlength="20" autocomplete="nickname" aria-label="Your name"></div>
-  <div class="row"><input id="college" placeholder="College (optional, counts toward the league)" maxlength="40" aria-label="College"></div>
-  <button id="join">Join room</button>
-  <div class="err" id="err" role="alert"></div>
+<div class="landing-page">
 
-  <p class="sub">Running the session? <a href="host.html">Host a game</a></p>
-</main>
+  <!-- ================= NAVBAR ================= -->
+
+  <nav class="landing-nav">
+
+    <div class="landing-brand">
+      <div class="landing-brand-icon">◆</div>
+      <span>AptiQuiz</span>
+    </div>
+
+    <div class="landing-nav-links">
+      <a href="#features">Features</a>
+      <a href="#join-section">Join</a>
+      <a href="host.html" class="nav-start">Host a Quiz</a>
+    </div>
+
+  </nav>
+
+
+  <!-- ================= HERO ================= -->
+
+  <section class="landing-hero">
+
+    <div class="hero-content">
+
+      <div class="hero-badge">
+        <span></span>
+        LIVE COMPETITIVE QUIZZING
+      </div>
+
+      <h1 class="landing-title">
+        Think fast.<br>
+        <span class="gradient-text">Compete smarter.</span>
+      </h1>
+
+      <p class="landing-description">
+        AptiQuiz brings real-time aptitude competitions to your classroom.
+        Join a quiz, challenge your friends and climb the leaderboard.
+      </p>
+
+      <div class="hero-actions">
+        <a href="#join-section" class="hero-btn primary">
+          Join a Quiz →
+        </a>
+
+        <a href="host.html" class="hero-btn secondary">
+          Host a Quiz
+        </a>
+      </div>
+
+    </div>
+
+
+    <!-- VISUAL -->
+
+    <div class="hero-visual">
+
+      <div class="visual-glow"></div>
+
+      <div class="quiz-orb">
+
+        <div class="quiz-orb-inner">
+
+          <div class="trophy">🏆</div>
+
+          <div class="orb-title">
+            AptiQuiz
+          </div>
+
+          <div class="orb-subtitle">
+            Compete • Learn • Win
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="floating-card score">
+        Your Score
+        <span class="floating-number">850 pts</span>
+      </div>
+
+      <div class="floating-card players">
+        👥 Players
+        <span class="floating-number">48</span>
+      </div>
+
+      <div class="floating-card live">
+        ⚡ LIVE
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ================= FEATURES ================= -->
+
+  <section class="landing-features" id="features">
+
+    <div class="feature-card">
+
+      <div class="feature-icon">
+        ⚡
+      </div>
+
+      <h3>Real-Time Multiplayer</h3>
+
+      <p>
+        Compete with classmates in a live quiz with instant
+        questions, answers and rankings.
+      </p>
+
+    </div>
+
+
+    <div class="feature-card">
+
+      <div class="feature-icon">
+        ✨
+      </div>
+
+      <h3>AI Question Generator</h3>
+
+      <p>
+        Generate aptitude questions using AI and review them
+        before adding them to your quiz.
+      </p>
+
+    </div>
+
+
+    <div class="feature-card">
+
+      <div class="feature-icon">
+        🏆
+      </div>
+
+      <h3>Smart Leaderboard</h3>
+
+      <p>
+        Track scores, accuracy and rankings while competing
+        against everyone in the room.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- ================= JOIN ================= -->
+
+  <section class="join-panel" id="join-section">
+
+    <h2>Join a Quiz</h2>
+
+    <p>
+      Enter your room code and get ready to compete.
+    </p>
+
+    <div class="row">
+      <input
+        id="code"
+        placeholder="Room code"
+        maxlength="5"
+        autocapitalize="characters"
+        autocomplete="off"
+        aria-label="Room code"
+      >
+    </div>
+
+    <div class="row">
+      <input
+        id="name"
+        placeholder="Your name"
+        maxlength="20"
+        autocomplete="nickname"
+        aria-label="Your name"
+      >
+    </div>
+
+    <div class="row">
+      <input
+        id="college"
+        placeholder="College (optional)"
+        maxlength="40"
+        aria-label="College"
+      >
+    </div>
+
+    <button id="join">
+      Join Quiz →
+    </button>
+
+    <div class="err" id="err" role="alert"></div>
+
+    <p class="host-link">
+      Running the session?
+      <a href="host.html">Host a game →</a>
+    </p>
+
+  </section>
+
+
+  <!-- ================= FOOTER ================= -->
+
+  <footer class="landing-footer">
+    AptiQuiz © 2026 · Compete • Learn • Win
+  </footer>
+
+</div>
+
+
 <script src="app.js"></script>
+
 <script>
+
   const { $ } = AQ;
+
   AQ.connect({
+
     joined: (m) => {
-      AQ.setSession({ role: 'player', code: m.code, key: m.pid });
+
+      AQ.setSession({
+        role: 'player',
+        code: m.code,
+        key: m.pid
+      });
+
       location.href = 'lobby.html';
+
     },
-    error: (m) => { $('err').textContent = m.message; $('join').disabled = false; },
+
+    error: (m) => {
+
+      $('err').textContent = m.message;
+      $('join').disabled = false;
+
+    },
+
   }, { rejoin: false });
 
+
   const params = new URLSearchParams(location.search);
-  if (params.get('code')) $('code').value = params.get('code').toUpperCase().slice(0, 5);
+
+  if (params.get('code')) {
+
+    $('code').value =
+      params.get('code')
+      .toUpperCase()
+      .slice(0, 5);
+
+  }
+
 
   function join() {
+
     $('err').textContent = '';
+
     $('join').disabled = true;
-    AQ.send({ type: 'join', code: $('code').value, name: $('name').value, college: $('college').value });
+
+    AQ.send({
+
+      type: 'join',
+
+      code: $('code').value,
+
+      name: $('name').value,
+
+      college: $('college').value
+
+    });
+
   }
+
+
   $('join').onclick = join;
-  ['code', 'name', 'college'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') join(); }));
+
+
+  ['code', 'name', 'college'].forEach((id) => {
+
+    $(id).addEventListener('keydown', (e) => {
+
+      if (e.key === 'Enter') {
+        join();
+      }
+
+    });
+
+  });
+
 </script>
+
 </body>
 </html>
