@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Host | AptiQuiz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1><span>Host a game</span></h1>
+  <p class="sub"><a href="index.html">Back to join</a></p>
+
+  <!-- Sign in -->
+  <section id="auth">
+    <div class="row"><input id="user" placeholder="Username" autocomplete="username" aria-label="Username"></div>
+    <div class="row"><input id="pass" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" aria-label="Password"></div>
+    <div class="row"><button id="login">Sign in</button><button id="register" class="alt">Create account</button></div>
+    <div class="err" id="aErr" role="alert"></div>
+  </section>
+
+  <!-- Dashboard -->
+  <section id="dash" class="hidden">
+    <p class="meta">Signed in as <span id="who"></span>. <a href="#" id="logout">Sign out</a></p>
+
+    <h2>Saved sets</h2>
+    <div id="sets"><p class="meta">No saved sets yet.</p></div>
+
+    <h2>Question set</h2>
+    <div class="card">
+      <div class="row"><input id="qText" placeholder="Question" aria-label="Question"></div>
+      <div class="row"><input id="o0" placeholder="Option A"><input id="o1" placeholder="Option B"></div>
+      <div class="row"><input id="o2" placeholder="Option C (optional)"><input id="o3" placeholder="Option D (optional)"></div>
+      <div class="row">
+        <select id="qCorrect" aria-label="Correct answer"><option value="0">Correct: A</option><option value="1">Correct: B</option><option value="2">Correct: C</option><option value="3">Correct: D</option></select>
+        <select id="qDiff" aria-label="Difficulty"><option>Easy</option><option selected>Medium</option><option>Hard</option></select>
+      </div>
+      <div class="row"><input id="qTopic" placeholder="Topic (e.g. Percentages)"><input id="qTime" type="number" min="5" max="120" value="20" aria-label="Seconds to answer"></div>
+      <button id="addQ" class="alt">Add question</button>
+      <div class="err" id="qErr" role="alert"></div>
+    </div>
+
+    <div id="qList"></div>
+    <div class="row"><input id="title" placeholder="Set title (to save it)" maxlength="60" aria-label="Set title"><button id="save" class="alt">Save set</button></div>
+    <div class="row"><button id="sample" class="alt">Load 5 sample questions</button><button id="create">Create room</button></div>
+    <div class="err" id="hErr" role="alert"></div>
+  </section>
+</main>
+<script src="app.js"></script>
+<script>
+  const { $, esc } = AQ;
+  let questions = [];
+  let savedSets = [];
+
+  // ---- auth
+  function showDash(name) {
+    $('auth').classList.add('hidden'); $('dash').classList.remove('hidden');
+    $('who').textContent = name; loadSets();
+  }
+  async function auth(mode) {
+    $('aErr').textContent = '';
+    try {
+      const r = await AQ.api('/api/auth', 'POST', { mode, username: $('user').value, password: $('pass').value });
+      localStorage.setItem('aq_token', r.token); localStorage.setItem('aq_user', r.username);
+      showDash(r.username);
+    } catch (e) { $('aErr').textContent = e.message; }
+  }
+  $('login').onclick = () => auth('login');
+  $('register').onclick = () => auth('register');
+  $('pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') auth('login'); });
+  $('logout').onclick = (e) => {
+    e.preventDefault(); localStorage.removeItem('aq_token'); localStorage.removeItem('aq_user'); location.reload();
+  };
+
+  // ---- saved sets
+  async function loadSets() {
+    try { savedSets = await AQ.api('/api/sets'); }
+    catch (e) { if (e.status === 401) { localStorage.removeItem('aq_token'); location.reload(); } return; }
+    $('sets').innerHTML = savedSets.length ? savedSets.map((s) =>
+      `<div class="card item"><div><b>${esc(s.title)}</b><div class="meta">${s.questions.length} questions</div></div>
+       <div><button class="small" data-use="${s.id}">Use</button> <button class="small alt" data-del="${s.id}">Delete</button></div></div>`).join('')
+      : '<p class="meta">No saved sets yet.</p>';
+    $('sets').querySelectorAll('[data-use]').forEach((b) => b.onclick = () => {
+      const s = savedSets.find((x) => x.id === +b.dataset.use); questions = s.questions.slice(); $('title').value = s.title; renderQs();
+    });
+    $('sets').querySelectorAll('[data-del]').forEach((b) => b.onclick = async () => {
+      await AQ.api('/api/sets/' + b.dataset.del, 'DELETE'); loadSets();
+    });
+  }
+  $('save').onclick = async () => {
+    $('hErr').textContent = '';
+    try { await AQ.api('/api/sets', 'POST', { title: $('title').value, questions }); loadSets(); }
+    catch (e) { $('hErr').textContent = e.message; }
+  };
+
+  // ---- builder
+  function renderQs() {
+    $('qList').innerHTML = questions.map((q, i) =>
+      `<div class="card item"><div><b>${esc(q.text)}</b><div class="meta">${esc(q.topic)}, ${q.difficulty}, ${q.time}s</div></div>
+       <button class="small alt" data-i="${i}">Remove</button></div>`).join('');
+    $('qList').querySelectorAll('button').forEach((b) => b.onclick = () => { questions.splice(+b.dataset.i, 1); renderQs(); });
+  }
+  $('addQ').onclick = () => {
+    const raw = [0, 1, 2, 3].map((i) => $('o' + i).value.trim());
+    const correct = +$('qCorrect').value;
+    const text = $('qText').value.trim();
+    if (!text) { $('qErr').textContent = 'Write the question first.'; return; }
+    if (!raw[correct]) { $('qErr').textContent = 'The correct answer points at an empty option.'; return; }
+    const options = raw.filter(Boolean);
+    if (options.length < 2) { $('qErr').textContent = 'Add at least two options.'; return; }
+    questions.push({
+      text, options, correct: raw.slice(0, correct).filter(Boolean).length,
+      topic: $('qTopic').value.trim() || 'General', difficulty: $('qDiff').value, time: +$('qTime').value || 20,
+    });
+    ['qText', 'o0', 'o1', 'o2', 'o3'].forEach((id) => $(id).value = '');
+    $('qErr').textContent = ''; renderQs();
+  };
+  $('sample').onclick = () => {
+    questions = [
+      { text: 'What is 15% of 240?', options: ['24', '30', '36', '48'], correct: 2, topic: 'Percentages', difficulty: 'Easy', time: 20 },
+      { text: 'A train covers 120 km in 2 hours. Its speed in m/s is about:', options: ['16.7', '20', '33.3', '60'], correct: 0, topic: 'Speed and time', difficulty: 'Medium', time: 30 },
+      { text: 'Next number: 2, 6, 12, 20, 30, ?', options: ['40', '42', '44', '36'], correct: 1, topic: 'Series', difficulty: 'Medium', time: 25 },
+      { text: 'A is twice as efficient as B. Together they finish a job in 12 days. A alone takes:', options: ['16', '18', '20', '24'], correct: 1, topic: 'Time and work', difficulty: 'Hard', time: 40 },
+      { text: 'Simple interest on Rs 5000 at 8% for 3 years is:', options: ['1000', '1200', '1500', '2400'], correct: 1, topic: 'Interest', difficulty: 'Easy', time: 20 },
+    ];
+    $('title').value = $('title').value || 'Sample aptitude set'; renderQs();
+  };
+
+  // ---- create room
+  AQ.connect({
+    created: (m) => { AQ.setSession({ role: 'host', code: m.code, key: m.host_key }); location.href = 'lobby.html'; },
+    error: (m) => { $('hErr').textContent = m.message; $('create').disabled = false; },
+  }, { rejoin: false });
+  $('create').onclick = () => {
+    $('hErr').textContent = '';
+    if (!questions.length) { $('hErr').textContent = 'Add at least one question.'; return; }
+    $('create').disabled = true;
+    AQ.send({ type: 'host_create', token: localStorage.getItem('aq_token'), questions });
+  };
+
+  if (localStorage.getItem('aq_token')) showDash(localStorage.getItem('aq_user') || '');
+</script>
+</body>
+</html>

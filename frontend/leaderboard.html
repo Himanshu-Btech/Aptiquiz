@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Results | AptiQuiz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <div id="body"></div>
+  <a class="btn alt" id="home" href="index.html">Back to home</a>
+</main>
+<script src="app.js"></script>
+<script>
+  const { $, esc } = AQ;
+  const s = AQ.getSession();
+  if (!s) location.replace('index.html');
+  const host = s && s.role === 'host';
+  $('home').onclick = () => AQ.clearSession();
+
+  AQ.connect({
+    final: (f) => {
+      if (host) {
+        $('body').innerHTML = `<h2>Final results</h2><table>${f.board.map((b) =>
+          `<tr><td>${b.rank}</td><td>${esc(b.name)}${b.college ? ` <span class="meta">${esc(b.college)}</span>` : ''}</td><td>${b.score}</td></tr>`).join('')}</table><br>`;
+        return;
+      }
+      const topics = Object.entries(f.topics).map(([t, v]) => `<tr><td>${esc(t)}</td><td>${v.right} / ${v.total}</td></tr>`).join('');
+      const lg = f.league;
+      $('body').innerHTML = `<h2>You finished ${f.rank} of ${f.of}</h2>
+        <div class="stat">
+          <div class="card"><div class="meta">Score</div><div class="big">${f.score}</div></div>
+          <div class="card"><div class="meta">Accuracy</div><div class="big">${f.accuracy}%</div></div>
+          <div class="card"><div class="meta">Avg time on correct</div><div class="big">${f.avg_seconds === null ? '-' : f.avg_seconds + 's'}</div></div>
+          <div class="card"><div class="meta">Season score</div><div class="big">${lg.season}</div></div>
+        </div>
+        <div class="card"><b>League</b>
+          <p class="meta">Player rank #${lg.player_rank}${lg.college ? `. ${esc(lg.college)} rank #${lg.college_rank}` : ''}</p></div>
+        <div class="card"><b>By topic</b><table>${topics}</table></div><br>`;
+    },
+  });
+</script>
+</body>
+</html>

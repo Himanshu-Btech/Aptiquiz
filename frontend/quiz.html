@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz | AptiQuiz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <!-- Question -->
+  <section id="play" class="hidden">
+    <div class="meta" id="meta"></div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="q" id="q"></div>
+    <div id="opts"></div>
+    <div class="meta" id="note" aria-live="polite"></div>
+  </section>
+
+  <!-- Reveal -->
+  <section id="reveal" class="hidden">
+    <div id="rBody"></div>
+    <button id="next" class="hidden">Next question</button>
+  </section>
+</main>
+<script src="app.js"></script>
+<script>
+  const { $, esc } = AQ;
+  const s = AQ.getSession();
+  if (!s) location.replace('index.html');
+  const host = s && s.role === 'host';
+  let tick = null;
+
+  function view(id) {
+    $('play').classList.toggle('hidden', id !== 'play');
+    $('reveal').classList.toggle('hidden', id !== 'reveal');
+  }
+  function runTimer(sec) {
+    clearInterval(tick);
+    const end = Date.now() + sec * 1000;
+    tick = setInterval(() => {
+      const left = Math.max(0, end - Date.now());
+      $('bar').style.width = (left / (sec * 1000) * 100) + '%';
+      if (!left) clearInterval(tick);
+    }, 100);
+  }
+
+  AQ.connect({
+    question: (q) => {
+      view('play');
+      $('meta').textContent = `Question ${q.index + 1} of ${q.total}, ${q.topic}, ${q.difficulty}`;
+      $('q').textContent = q.text;
+      $('note').textContent = host ? `${q.answered || 0} / ${q.players} answered` : '';
+      runTimer(q.time);
+      $('opts').innerHTML = q.options.map((o, i) =>
+        `<button class="opt" data-i="${i}" ${host ? 'disabled' : ''}>${esc(o)}</button>`).join('');
+      if (!host) $('opts').querySelectorAll('.opt').forEach((b) => b.onclick = () => {
+        $('opts').querySelectorAll('.opt').forEach((x) => x.disabled = true);
+        b.classList.add('picked');
+        AQ.send({ type: 'answer', choice: +b.dataset.i });
+      });
+    },
+    locked: () => {
+      $('note').textContent = 'Answer locked in. Waiting for the others.';
+      $('opts').querySelectorAll('.opt').forEach((x) => x.disabled = true);
+    },
+    progress: (p) => { if (host) $('note').textContent = `${p.answered} / ${p.total} answered`; },
+    reveal: (r) => {
+      clearInterval(tick); view('reveal');
+      if (host) {
+        const max = Math.max(1, ...r.counts);
+        $('rBody').innerHTML = `<h2>Answer: ${esc(r.options[r.answer])}</h2>` +
+          r.options.map((o, i) => `<div class="card" style="${i === r.answer ? 'border-color:var(--ok)' : ''}">${esc(o)}
+            <div class="bar"><i style="width:${r.counts[i] / max * 100}%"></i></div>${r.counts[i]} picked</div>`).join('') +
+          `<h2>Leaderboard</h2><table>${r.board.map((b) => `<tr><td>${b.rank}</td><td>${esc(b.name)}</td><td>${b.score}</td></tr>`).join('')}</table><br>`;
+        $('next').classList.remove('hidden');
+        $('next').textContent = r.last ? 'Show final results' : 'Next question';
+        $('next').disabled = false;
+      } else {
+        const ok = r.picked !== null && r.picked === r.correct;
+        $('rBody').innerHTML = `<h2>${r.picked === null ? "Time's up" : ok ? 'Correct' : 'Not this one'}</h2>
+          <div class="big" style="color:${ok ? 'var(--ok)' : 'var(--bad)'}">+${r.gained}</div>
+          <p class="meta">Score ${r.score}. You're ${r.rank} of ${r.of}. Waiting for the host.</p>`;
+      }
+    },
+  });
+  $('next').onclick = () => { $('next').disabled = true; AQ.send({ type: 'next' }); };
+</script>
+</body>
+</html>

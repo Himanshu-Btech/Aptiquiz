@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lobby | AptiQuiz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1><span>Lobby</span></h1>
+  <p class="meta" id="hint"></p>
+  <div class="code" id="code" aria-label="Room code"></div>
+  <div class="card">
+    <div class="meta" id="count" aria-live="polite">0 players</div>
+    <div class="chips" id="list"></div>
+  </div>
+  <button id="start" class="hidden" disabled>Start game</button>
+</main>
+<script src="app.js"></script>
+<script>
+  const { $, esc } = AQ;
+  const s = AQ.getSession();
+  if (!s) location.replace('index.html');
+  const host = s && s.role === 'host';
+  $('code').textContent = s ? s.code : '';
+  $('hint').textContent = host
+    ? 'Students open ' + location.host + ' and enter this code.'
+    : "You're in. Waiting for the host to start.";
+  if (host) $('start').classList.remove('hidden');
+
+  AQ.connect({
+    lobby: (m) => {
+      $('count').textContent = `${m.players.length} / ${m.max} players`;
+      $('list').innerHTML = m.players.map((n) =>
+        `<span class="chip">${esc(n)}${host ? `<button data-n="${esc(n)}" aria-label="Remove ${esc(n)}">&times;</button>` : ''}</span>`).join('');
+      if (host) {
+        $('start').disabled = m.players.length === 0;
+        $('list').querySelectorAll('button').forEach((b) => b.onclick = () => AQ.send({ type: 'kick', name: b.dataset.n }));
+      }
+    },
+  });
+  $('start').onclick = () => { $('start').disabled = true; AQ.send({ type: 'start' }); };
+</script>
+</body>
+</html>

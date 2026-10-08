@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AptiQuiz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1><span>AptiQuiz</span></h1>
+  <p class="sub">Live aptitude rounds for your class.</p>
+
+  <div class="row"><input id="code" placeholder="Room code" maxlength="5" autocapitalize="characters" autocomplete="off" aria-label="Room code"></div>
+  <div class="row"><input id="name" placeholder="Your name" maxlength="20" autocomplete="nickname" aria-label="Your name"></div>
+  <div class="row"><input id="college" placeholder="College (optional, counts toward the league)" maxlength="40" aria-label="College"></div>
+  <button id="join">Join room</button>
+  <div class="err" id="err" role="alert"></div>
+
+  <p class="sub">Running the session? <a href="host.html">Host a game</a></p>
+</main>
+<script src="app.js"></script>
+<script>
+  const { $ } = AQ;
+  AQ.connect({
+    joined: (m) => {
+      AQ.setSession({ role: 'player', code: m.code, key: m.pid });
+      location.href = 'lobby.html';
+    },
+    error: (m) => { $('err').textContent = m.message; $('join').disabled = false; },
+  }, { rejoin: false });
+
+  const params = new URLSearchParams(location.search);
+  if (params.get('code')) $('code').value = params.get('code').toUpperCase().slice(0, 5);
+
+  function join() {
+    $('err').textContent = '';
+    $('join').disabled = true;
+    AQ.send({ type: 'join', code: $('code').value, name: $('name').value, college: $('college').value });
+  }
+  $('join').onclick = join;
+  ['code', 'name', 'college'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') join(); }));
+</script>
+</body>
+</html>
